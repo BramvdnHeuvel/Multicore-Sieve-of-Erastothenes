@@ -100,19 +100,4 @@ int find_optimal_prime_distribution(int n) {
     }
 
     return 1;
-
-    int phi_x   = 2;
-    int x       = 1;
-
-    for (int i=2; i<maximum; i++) {
-        int new_phi_x   = phi(i);
-        int new_x       = i;
-
-        if (new_phi_x <= n && new_x > x) {
-            x       = new_x;
-            phi_x   = new_phi_x;
-        }
-    }
-
-    return x;
 }
