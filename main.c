@@ -1,34 +1,61 @@
 #include <stdio.h>
 #include "initialize.c"
+#include <bsp.h>
+#include <stdlib.h>
 
-int main(void) {
-    unsigned int P;
+static unsigned int P;
 
-    printf( "How many cores do you have available?\n");    
+void spmd() {
+    bsp_begin( P );
+
+    // INITIALIZATION PROCESS
+    // Determine where to iterate.
+    // Also, gather the first few prime numbers.
+    // 
+    int *primes     = find_all_primes(P);
+    int x           = find_optimal_p_factors(P, 1, primes, 0);
+    if (P==1) { // Hardcode if there's only 1 core
+        x = 2;
+    }
+    int *coprimes   = find_coprimes(x);
+
+    int b           = coprimes[bsp_pid()];
+
+    printf("We're gonna free some memory in core %u!\n", bsp_pid());
+    free(primes);
+    free(coprimes);
+
+    // Initialization complete
+    printf("Core %u has initialized as %dn+%d\n", bsp_pid(), x, b);
+    bsp_end();
+}
+
+int main( int argc, char ** argv ) {
+    unsigned int available_cores;
+
+    printf( "How many threads do you want started? There are %u cores available.\n", bsp_nprocs() );    
     fflush( stdout );
-    scanf( "%u", &P );
+    scanf( "%u", &available_cores );
 
-    printf("Finding prime numbers below %u... ", P);
-    int *primes = find_all_primes(P);
-    printf("Complete!\n");
-
-    printf("Finding optimal x value... ");
-    int x       = find_optimal_p_factors(P, 1, primes, 0);
-    printf("Complete!\n");
+    int *primes = find_all_primes(available_cores);
+    int x       = find_optimal_p_factors(available_cores, 1, primes, 0);
 
     int phi_x   = phi(x, primes);
 
-    printf("If you have %u cores available, it is best to use only %d of them.\n", P, phi_x);
-    printf("Numbers coprime to %d are the following:\n", x);
-
-    int *coprimes = find_coprimes(x);
-
-    for (int i=0; coprimes[i]!=-1; i++) {
-        printf("%dn+%d   ", x, coprimes[i]);
-    }
-
-    printf("\n");
-
+    printf("If you have %u cores available, it is best to use %d of them.\n", available_cores, phi_x);
+    
     free(primes);
-    free(coprimes);
+    P = phi_x;
+
+    // Start threads
+    if( P == 0 || P > bsp_nprocs() ) {
+        fprintf( stderr, "Cannot start %u threads.\n", P );
+        return EXIT_FAILURE;
+    }
+    bsp_init( &spmd, argc, argv );
+    spmd();
+
+    printf("Function has ended.\n");
+    
+    return EXIT_SUCCESS;
 }
