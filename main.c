@@ -18,15 +18,15 @@ void spmd() {
         x = 2;
     }
     int *coprimes   = find_coprimes(x);
-
     int b           = coprimes[bsp_pid()];
 
-    printf("We're gonna free some memory in core %u!\n", bsp_pid());
     free(primes);
     free(coprimes);
 
     // Initialization complete
     printf("Core %u has initialized as %dn+%d\n", bsp_pid(), x, b);
+    bsp_sync();
+    
     bsp_end();
 }
 
