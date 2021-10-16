@@ -2,15 +2,33 @@
 #include "initialize.c"
 
 int main(void) {
-    int totients[48] = {2, 6, 12, 18, 30, 42, 60, 66, 90, 120, 126, 150, 210, 240, 270, 330, 420, 462, 510, 630, 660, 690, 840, 870, 1050, 1260, 1320, 1470, 1680, 1890, 2310, 2730, 2940, 3150, 3570, 3990, 4620, 4830, 5460, 5610, 5670, 6090, 6930, 7140, 7350, 8190, 9240, 9660};
-    
-    for (int i=1; i<10000; i++) {
-        // int x       = totients[i];
-        int x       = find_optimal_prime_distribution(i);
-        int phi_x   = phi(x);
+    unsigned int P;
 
-        if (i==phi_x) {
-            printf("%d\t\t%d->\t%d\t%f\t%f\n", i, x, phi_x, x/((float)phi_x), ((float)phi_x)/x);
-        }
+    printf( "How many cores do you have available?\n");    
+    fflush( stdout );
+    scanf( "%u", &P );
+
+    printf("Finding prime numbers below %u... ", P);
+    int *primes = find_all_primes(P);
+    printf("Complete!\n");
+
+    printf("Finding optimal x value... ");
+    int x       = find_optimal_p_factors(P, 1, primes, 0);
+    printf("Complete!\n");
+
+    int phi_x   = phi(x, primes);
+
+    printf("If you have %u cores available, it is best to use only %d of them.\n", P, phi_x);
+    printf("Numbers coprime to %d are the following:\n", x);
+
+    int *coprimes = find_coprimes(x);
+
+    for (int i=0; coprimes[i]!=-1; i++) {
+        printf("%dn+%d   ", x, coprimes[i]);
     }
+
+    printf("\n");
+
+    free(primes);
+    free(coprimes);
 }
