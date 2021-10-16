@@ -51,18 +51,40 @@ int *find_coprimes(int x) {
     Calculate how many numbers lower than x are coprime with x
 */
 int phi(int x) {
-    int *coprimes = find_coprimes(x);
-    int primes = 0;
+    int n     = x;
+    int phi_x = 1;
+    
+    for (int p=2; p<=n; p++) {
+        bool is_prime = true;
 
-    for (int i=0; i<=x; i++) {
-        if (coprimes[i] == -1) {
-            primes = i;
-            break;
+        for (int i=2; i*i<=p; i++) {
+            if (p % i == 0) {
+                is_prime = false;
+                break;
+            }
+        }
+
+        if (is_prime) {
+            int occurrences = 0;
+
+            // p is a prime number
+            while (n % p == 0) {
+                occurrences++;
+                n = n / p;
+
+                if (occurrences == 1) {
+                    phi_x = phi_x * (p-1);
+                } else {
+                    phi_x = phi_x * p;
+                }
+            }
         }
     }
 
-    free(coprimes);
-    return primes;
+    if (n != 1) {
+        printf("WARNING: phi(%d) could not entirely break up!\nRemainder:\t%d\nOutput:\t%d\n", x, n, phi_x);
+    }
+    return phi_x;
 }
 
 /*
