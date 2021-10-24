@@ -1,8 +1,9 @@
 #include <stdio.h>
-#include "initialize.c"
 #include <bsp.h>
 #include <stdlib.h>
-#include "big_int.h"
+#include "config.h"
+#include "initialize.c"
+#include "sieve.c"
 
 static unsigned int P;
 
@@ -24,15 +25,26 @@ void spmd() {
     free(primes);
     free(coprimes);
 
+    // Get ready for finding prime numbers
+    struct primeSlice *slice = buildStandardSlice(bsp_pid(), bsp_nprocs(), x);
+    BIG_INT numbers[1024];
+
     // Initialization complete
     printf("Core %u has initialized as %dn+%d\n", bsp_pid(), x, b);
-    bsp_sync();
+
+    // There's no point in syncing at the end of initialization
+    // as no information needs to be exchanged, but I like the
+    // idea that the programs all start looking for prime numbers
+    // at the same time.
+    bsp_sync(); // comment this line if you want to optimize!
 
     bsp_end();
 }
 
 int main( int argc, char ** argv ) {
     unsigned int available_cores;
+
+    return 0;
 
     printf( "How many threads do you want started? There are %u cores available.\n", bsp_nprocs() );    
     fflush( stdout );
@@ -44,7 +56,7 @@ int main( int argc, char ** argv ) {
     BIG_INT phi_x   = phi(x, primes);
 
     printf("If you have %u cores available, it is best to use %d of them.\n", available_cores, phi_x);
-    
+
     free(primes);
     P = phi_x;
 
