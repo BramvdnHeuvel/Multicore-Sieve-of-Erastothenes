@@ -2,6 +2,7 @@
 #include "initialize.c"
 #include <bsp.h>
 #include <stdlib.h>
+#include "big_int.h"
 
 static unsigned int P;
 
@@ -12,13 +13,13 @@ void spmd() {
     // Determine where to iterate.
     // Also, gather the first few prime numbers.
     // 
-    int *primes     = find_all_primes(P);
-    int x           = find_optimal_p_factors(P, 1, primes, 0);
+    BIG_INT *primes      = find_all_primes(P);
+    BIG_INT  x           = find_optimal_p_factors(P, 1, primes, 0);
     if (P==1) { // Hardcode if there's only 1 core
         x = 2;
     }
-    int *coprimes   = find_coprimes(x);
-    int b           = coprimes[bsp_pid()];
+    BIG_INT *coprimes    = find_coprimes(x);
+    BIG_INT b            = coprimes[bsp_pid()];
 
     free(primes);
     free(coprimes);
@@ -26,7 +27,7 @@ void spmd() {
     // Initialization complete
     printf("Core %u has initialized as %dn+%d\n", bsp_pid(), x, b);
     bsp_sync();
-    
+
     bsp_end();
 }
 
@@ -37,10 +38,10 @@ int main( int argc, char ** argv ) {
     fflush( stdout );
     scanf( "%u", &available_cores );
 
-    int *primes = find_all_primes(available_cores);
-    int x       = find_optimal_p_factors(available_cores, 1, primes, 0);
+    BIG_INT *primes = find_all_primes(available_cores);
+    BIG_INT x       = find_optimal_p_factors(available_cores, 1, primes, 0);
 
-    int phi_x   = phi(x, primes);
+    BIG_INT phi_x   = phi(x, primes);
 
     printf("If you have %u cores available, it is best to use %d of them.\n", available_cores, phi_x);
     

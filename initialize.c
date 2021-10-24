@@ -1,37 +1,35 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include "big_int.h"
 
-// Assume that a maximum of 10^20 cores will be used (that's 10 billion billion)
-// The lower this number, the quicker initalization is.
-// The higher, the more certain you can be 
-// that you won't accidentally miss out on efficient prime distributions
-#define MAX_PROCESSORS 20
+// Use in final code
+BIG_INT *find_all_primes(BIG_INT b);
+BIG_INT  find_optimal_p_factors(BIG_INT max_phi, BIG_INT current_x, BIG_INT *primes, BIG_INT prime_offset);
+BIG_INT  phi(BIG_INT x, BIG_INT *primes);
+BIG_INT *find_coprimes(BIG_INT x);
+bool coprime(BIG_INT a, BIG_INT b);
 
-int  blind_phi(int x);
-bool coprime(int a, int b);
-int *find_all_primes(int b);
-int *find_coprimes(int x);
-int  find_optimal_p_factors(int max_phi, int current_x, int *primes, int prime_offset);
+// Legacy code
+BIG_INT  blind_phi(BIG_INT x);
 int  find_optimal_phi_ratio(int n);
 int  inverse_blind_phi(int a);
-int  phi(int x, int *primes);
 
 /*
     Find all primes between 2 and b
 
     The function returns an allocated array that ends with a -1
 */
-int *find_all_primes(int b) {
-    int *primes = malloc(sizeof(int) * blind_phi(b));
+BIG_INT *find_all_primes(BIG_INT b) {
+    BIG_INT *primes = malloc(sizeof(BIG_INT) * blind_phi(b));
     primes[0] = -1;
 
-    for (int n=2; n<=b; n++) {
+    for (BIG_INT n=2; n<=b; n++) {
         bool is_prime = true;
-        int i = 0;
+        BIG_INT i = 0;
 
         while (primes[i] != -1) {
-            int p = primes[i];
+            BIG_INT p = primes[i];
 
             if (n % p == 0) {
                 is_prime = false;
@@ -53,13 +51,13 @@ int *find_all_primes(int b) {
 /*
     Calculate phi based on known prime numbers
 */
-int phi(int x, int *primes) {
-    int n     = x;
-    int phi_x = 1;
+BIG_INT phi(BIG_INT x, BIG_INT *primes) {
+    BIG_INT n     = x;
+    BIG_INT phi_x = 1;
 
-    for (int i=0; primes[i]!=-1; i++) {
-        int p           = primes[i];
-        int occurrences = 0;
+    for (BIG_INT i=0; primes[i]!=-1; i++) {
+        BIG_INT p           = primes[i];
+        int     occurrences = 0;
 
         while (n % p == 0) {
             occurrences++;
@@ -76,6 +74,7 @@ int phi(int x, int *primes) {
     if (n != 1) {
         printf("WARNING: phi(%d) could not entirely break up!\nRemainder:\t%d\nOutput:\t%d\n", x, n, phi_x);
     }
+    // printf("%d\n", x);
     return phi_x;
 }
 
@@ -83,7 +82,7 @@ int phi(int x, int *primes) {
     Look for a factor of numbers as high as possible
     where phi(x) is still lower than the number
 */
-int find_optimal_p_factors(int max_phi, int current_x, int *primes, int prime_offset) {
+BIG_INT find_optimal_p_factors(BIG_INT max_phi, BIG_INT current_x, BIG_INT *primes, BIG_INT prime_offset) {
     int optimal_factor = 1;
     
     for (int i=prime_offset; primes[i]!=-1; i++) {
@@ -104,9 +103,9 @@ int find_optimal_p_factors(int max_phi, int current_x, int *primes, int prime_of
 /*
     Calculate whether two numbers a coprime or not.
 */
-bool coprime(int a, int b) {
+bool coprime(BIG_INT a, BIG_INT b) {
     while (a > 1) {
-        int temp = b;
+        BIG_INT temp = b;
         b = a;
         a = temp % a;
     }
@@ -119,16 +118,16 @@ bool coprime(int a, int b) {
     The function returns a malloc'd array of x integers. The list
     of coprime numbers ends with a -1
 */
-int *find_coprimes(int x) {
-    int *primes = find_all_primes(x);
-    int phi_x   = phi(x, primes);
+BIG_INT *find_coprimes(BIG_INT x) {
+    BIG_INT *primes = find_all_primes(x);
+    BIG_INT phi_x   = phi(x, primes);
 
     free(primes);
 
-    int *coprimes = malloc(sizeof(int) * (phi_x + 1));
-    int cursor = 0;
+    BIG_INT *coprimes = malloc(sizeof(int) * (phi_x + 1));
+    BIG_INT cursor = 0;
 
-    for (int i=1; i<x; i++) {
+    for (BIG_INT i=1; i<x; i++) {
         if (coprime(i, x)) {
             coprimes[cursor] = i;
             cursor++;
@@ -142,11 +141,11 @@ int *find_coprimes(int x) {
 /*
     Calculate how many numbers lower than x are coprime with x
 */
-int blind_phi(int x) {
-    int n     = x;
-    int phi_x = 1;
+BIG_INT blind_phi(BIG_INT x) {
+    BIG_INT n     = x;
+    BIG_INT phi_x = 1;
     
-    for (int p=2; p<=n; p++) {
+    for (BIG_INT p=2; p<=n; p++) {
         int occurrences = 0;
 
         // p is a prime number
@@ -186,21 +185,3 @@ int inverse_blind_phi(int a) {
     return 0;
 }
 
-/*
-    Calculate the number of cores to distribute the prime numbers in
-    to go through the numbers as efficiently as possible.
-*/
-int find_optimal_prime_distribution(int n) {
-    int maximum = 2*n*n;
-    if (2*n >= MAX_PROCESSORS) {
-        maximum = MAX_PROCESSORS * n;
-    }
-
-    for (int x=maximum; x>1; x--) {
-        if (blind_phi(x) <= n) {
-            return x;
-        }
-    }
-
-    return 1;
-}
