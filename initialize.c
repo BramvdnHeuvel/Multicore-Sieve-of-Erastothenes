@@ -1,19 +1,15 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include "big_int.h"
+#include "config.h"
 
-// Use in final code
-BIG_INT *find_all_primes(BIG_INT b);
-BIG_INT  find_optimal_p_factors(BIG_INT max_phi, BIG_INT current_x, BIG_INT *primes, BIG_INT prime_offset);
-BIG_INT  phi(BIG_INT x, BIG_INT *primes);
-BIG_INT *find_coprimes(BIG_INT x);
-bool coprime(BIG_INT a, BIG_INT b);
-
-// Legacy code
+// Defined functions
 BIG_INT  blind_phi(BIG_INT x);
-int  find_optimal_phi_ratio(int n);
-int  inverse_blind_phi(int a);
+bool     coprime(BIG_INT a, BIG_INT b);
+BIG_INT *find_all_primes(BIG_INT b);
+BIG_INT *find_coprimes(BIG_INT x);
+BIG_INT  find_optimal_p_factors(BIG_INT n, BIG_INT current_x, BIG_INT *primes, BIG_INT prime_offset);
+BIG_INT  phi(BIG_INT x, BIG_INT *primes);
 
 /*
     Find all primes between 2 and b
@@ -49,7 +45,7 @@ BIG_INT *find_all_primes(BIG_INT b) {
 }
 
 /*
-    Calculate phi based on known prime numbers
+    Calculate phi(x). The list of primes can be the output of function `find_all_primes`
 */
 BIG_INT phi(BIG_INT x, BIG_INT *primes) {
     BIG_INT n     = x;
@@ -74,24 +70,22 @@ BIG_INT phi(BIG_INT x, BIG_INT *primes) {
     if (n != 1) {
         printf("WARNING: phi(%d) could not entirely break up!\nRemainder:\t%d\nOutput:\t%d\n", x, n, phi_x);
     }
-    // printf("%d\n", x);
     return phi_x;
 }
 
 /*
-    Look for a factor of numbers as high as possible
-    where phi(x) is still lower than the number
+    Find an x for a given n such that phi(x) <= n
 */
-BIG_INT find_optimal_p_factors(BIG_INT max_phi, BIG_INT current_x, BIG_INT *primes, BIG_INT prime_offset) {
+BIG_INT find_optimal_p_factors(BIG_INT n, BIG_INT current_x, BIG_INT *primes, BIG_INT prime_offset) {
     int optimal_factor = 1;
     
     for (int i=prime_offset; primes[i]!=-1; i++) {
         int p = primes[i];
-        if (phi(current_x * p, primes) > max_phi) {
+        if (phi(current_x * p, primes) > n) {
             break;
         }
 
-        int factor = find_optimal_p_factors(max_phi, current_x*p, primes, i);
+        int factor = find_optimal_p_factors(n, current_x*p, primes, i);
         if (p * factor > optimal_factor) {
             optimal_factor = p * factor;
         }
@@ -165,23 +159,5 @@ BIG_INT blind_phi(BIG_INT x) {
         printf("WARNING: blind_phi(%d) could not entirely break up!\nRemainder:\t%d\nOutput:\t%d\n", x, n, phi_x);
     }
     return phi_x;
-}
-
-/*
-    Find the first x for which blind_phi(x)=a
-
-    If there is no such x, the function returns zero.
-*/
-int inverse_blind_phi(int a) {
-    int x = a+1;
-    int maximum = 2*a*a;
-
-    while (x < maximum) {
-        if (blind_phi(x) == a) {
-            return x;
-        }
-        x++;
-    }
-    return 0;
 }
 
