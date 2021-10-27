@@ -5,6 +5,9 @@
 // Smaller numbers make the program runs faster,
 // but it means you can look less far for prime
 // numbers.
+// Please make sure that the BIG_INT type is NOT
+// a float of some sort. The program assumes
+// no floating point errors.
 
 // Up to 65,535
 typedef unsigned int BIG_INT;
